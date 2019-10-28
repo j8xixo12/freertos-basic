@@ -6,25 +6,26 @@ CC := $(CROSS_COMPILE)gcc
 CFLAGS = -fno-common -O0 \
 	 -std=c99 -pedantic \
 	 -gdwarf-2 -ffreestanding -g3 \
-	 -mcpu=cortex-m3 -mthumb \
+	 -mfpu=fpv4-sp-d16 -mfloat-abi=hard \
+	 -mcpu=cortex-m4 -mthumb \
 	 -Wall -Werror \
-	 -Tmain.ld -nostartfiles \
+	 -Tstm32_flash.ld -nostartfiles \
 	 -DUSER_NAME=\"$(USER)\"
 
-ARCH = CM3
+ARCH = CM4
 VENDOR = ST
-PLAT = STM32F10x
+PLAT = STM32F4xx
 
 LIBDIR = .
 CODEBASE = freertos
 CMSIS_LIB = $(CODEBASE)/libraries/CMSIS/$(ARCH)
-STM32_LIB = $(CODEBASE)/libraries/STM32F10x_StdPeriph_Driver
+STM32_LIB = $(CODEBASE)/libraries/STM32F4xx_StdPeriph_Driver
 
 CMSIS_PLAT_SRC = $(CMSIS_LIB)/DeviceSupport/$(VENDOR)/$(PLAT)
 
 FREERTOS_SRC = $(CODEBASE)/libraries/FreeRTOS
 FREERTOS_INC = $(FREERTOS_SRC)/include/                                       
-FREERTOS_PORT_INC = $(FREERTOS_SRC)/portable/GCC/ARM_$(ARCH)/
+FREERTOS_PORT_INC = $(FREERTOS_SRC)/portable/GCC/ARM_$(ARCH)F/
 
 OUTDIR = build
 SRCDIR = src\
@@ -47,8 +48,8 @@ HEAP_IMPL = heap_ww
 SRC = $(wildcard $(addsuffix /*.c,$(SRCDIR))) \
       $(wildcard $(addsuffix /*.s,$(SRCDIR))) \
       $(FREERTOS_SRC)/portable/MemMang/$(HEAP_IMPL).c \
-      $(FREERTOS_SRC)/portable/GCC/ARM_CM3/port.c \
-      $(CMSIS_PLAT_SRC)/startup/gcc_ride7/startup_stm32f10x_md.s
+      $(FREERTOS_SRC)/portable/GCC/ARM_CM4F/port.c \
+      $(CMSIS_PLAT_SRC)/startup/gcc_ride7/startup_stm32f40xx.s
 OBJ := $(addprefix $(OUTDIR)/,$(patsubst %.s,%.o,$(SRC:.c=.o)))
 DEP = $(OBJ:.o=.o.d)
 DAT =
@@ -86,6 +87,9 @@ $(OUTDIR)/%.o: %.s
 
 clean:
 	rm -rf $(OUTDIR) $(TMPDIR)
+
+flash: $(OUTDIR)/$(TARGET).bin
+	st-flash write $(OUTDIR)/$(TARGET).bin 0x8000000
 
 -include $(DEP)
 

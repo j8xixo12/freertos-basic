@@ -1,7 +1,13 @@
 #ifndef __STM32_P103_H
 #define __STM32_P103_H
 
-/* This library contains routines for interfacing with the STM32 P103 board. */
+#include "stm32f4xx.h"
+#include "stm32f4xx_gpio.h"
+#include "stm32f4xx_rcc.h"
+#include "stm32f4xx_usart.h"
+#include "stm32f4xx_exti.h"
+#include "stm32f4xx_syscfg.h"
+#include "misc.h"
 
 /* Initialize the LED (the board only has one). */
 void init_led(void);

@@ -1,5 +1,5 @@
 #define USE_STDPERIPH_DRIVER
-#include "stm32f10x.h"
+#include "stm32f4xx.h"
 #include "stm32_p103.h"
 /* Scheduler includes. */
 #include "FreeRTOS.h"
@@ -28,24 +28,24 @@ volatile xSemaphoreHandle serial_tx_wait_sem = NULL;
 /* Add for serial input */
 volatile xQueueHandle serial_rx_queue = NULL;
 
-/* IRQ handler to handle USART2 interruptss (both transmit and receive
+/* IRQ handler to handle USART3 interruptss (both transmit and receive
  * interrupts). */
-void USART2_IRQHandler()
+void USART3_IRQHandler()
 {
 	static signed portBASE_TYPE xHigherPriorityTaskWoken;
 
 	/* If this interrupt is for a transmit... */
-	if (USART_GetITStatus(USART2, USART_IT_TXE) != RESET) {
+	if (USART_GetITStatus(USART3, USART_IT_TXE) != RESET) {
 		/* "give" the serial_tx_wait_sem semaphore to notfiy processes
 		 * that the buffer has a spot free for the next byte.
 		 */
 		xSemaphoreGiveFromISR(serial_tx_wait_sem, &xHigherPriorityTaskWoken);
 
 		/* Diables the transmit interrupt. */
-		USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
+		USART_ITConfig(USART3, USART_IT_TXE, DISABLE);
 		/* If this interrupt is for a receive... */
-	}else if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET){
-		char msg = USART_ReceiveData(USART2);
+	}else if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET){
+		char msg = USART_ReceiveData(USART3);
 
 		/* If there is an error when queueing the received byte, freeze! */
 		if(!xQueueSendToBackFromISR(serial_rx_queue, &msg, &xHigherPriorityTaskWoken))
@@ -74,13 +74,13 @@ void send_byte(char ch)
 	/* Send the byte and enable the transmit interrupt (it is disabled by
 	 * the interrupt).
 	 */
-	USART_SendData(USART2, ch);
-	USART_ITConfig(USART2, USART_IT_TXE, ENABLE);
+	USART_SendData(USART3, (unsigned int)ch);
+	USART_ITConfig(USART3, USART_IT_TXE, ENABLE);
 }
 
 char recv_byte()
 {
-	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
+	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
 	char msg;
 	while(!xQueueReceive(serial_rx_queue, &msg, portMAX_DELAY));
 	return msg;
