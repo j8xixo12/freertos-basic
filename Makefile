@@ -41,7 +41,7 @@ INCDIR = include \
 INCLUDES = $(addprefix -I,$(INCDIR))
 DATDIR = data
 TOOLDIR = tool
-TMPDiR = output
+TMPDIR = output
 
 HEAP_IMPL = heap_ww
 SRC = $(wildcard $(addsuffix /*.c,$(SRCDIR))) \
