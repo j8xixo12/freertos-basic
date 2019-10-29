@@ -18,4 +18,4 @@ $(ROMDIR):
 $(OUTDIR)/%/mkromfs: %/mkromfs.c
 	@mkdir -p $(dir $@)
 	@echo "    CC      "$@
-	gcc -Wall -o $@ $^
+	@gcc -Wall -o $@ $^ -save-temps=obj

@@ -3,13 +3,12 @@ TARGET = main
 
 CROSS_COMPILE ?= arm-none-eabi-
 CC := $(CROSS_COMPILE)gcc
-CFLAGS = -fno-common -O0 \
-	 -std=c99 -pedantic \
-	 -gdwarf-2 -ffreestanding -g3 \
+CFLAGS = -O0 \
+	 -std=c99 \
 	 -mfpu=fpv4-sp-d16 -mfloat-abi=hard \
 	 -mcpu=cortex-m4 -mthumb \
-	 -Wall -Werror \
-	 -Tstm32_flash.ld -nostartfiles \
+	 -Wall -Werror -nostdlib\
+	 -Tstm32_flash.ld \
 	 -DUSER_NAME=\"$(USER)\"
 
 ARCH = CM4

@@ -1,7 +1,11 @@
-#include "stm32_p103.h"
+#include "stm32_F407.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 const uint16_t LEDS = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
 const uint16_t LED[4] = {GPIO_Pin_12, GPIO_Pin_13, GPIO_Pin_14, GPIO_Pin_15};
+static int i = 0;
+const portTickType xDelay = 500 / portTICK_RATE_MS;
 
 void init_led(void)
 {
@@ -13,6 +17,16 @@ void init_led(void)
     GPIO_Init(GPIOD, &gpio);
 
     GPIO_SetBits(GPIOD, LEDS);
+}
+
+void led_blink(void *pvParameters) { 
+    while (1) {
+        GPIO_ResetBits(GPIOD, LEDS);
+        GPIO_SetBits(GPIOD, LED[i % 4]);
+        ++i;
+        vTaskDelay(xDelay);
+    }
+    return;
 }
 
 void init_button(void)
@@ -58,32 +72,32 @@ void enable_button_interrupts(void)
 
 void init_rs232(void)
 {
-    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOC, ENABLE);  
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
+    RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);  
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
     GPIO_InitTypeDef gpio;
     
     //PC10 init
-    gpio.GPIO_Pin = GPIO_Pin_10;
+    gpio.GPIO_Pin = GPIO_Pin_2;
     gpio.GPIO_Mode = GPIO_Mode_AF; // PC10 is Tx pin
     gpio.GPIO_Speed = GPIO_Speed_100MHz;
     gpio.GPIO_OType = GPIO_OType_PP;
     gpio.GPIO_PuPd = GPIO_PuPd_UP;
-    GPIO_PinAFConfig(GPIOC, GPIO_PinSource10, GPIO_AF_USART3);
-    GPIO_Init(GPIOC, &gpio);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource2, GPIO_AF_USART2);
+    GPIO_Init(GPIOA, &gpio);
     
     //PC11 init
-    gpio.GPIO_Pin = GPIO_Pin_11;
+    gpio.GPIO_Pin = GPIO_Pin_3;
     gpio.GPIO_Mode = GPIO_Mode_AF; // PC11 is Rx pin
     gpio.GPIO_Speed = GPIO_Speed_100MHz;
     gpio.GPIO_OType = GPIO_OType_PP;
     gpio.GPIO_PuPd = GPIO_PuPd_UP;
-    GPIO_PinAFConfig(GPIOC, GPIO_PinSource11, GPIO_AF_USART3);
-    GPIO_Init(GPIOC, &gpio);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource3, GPIO_AF_USART2);
+    GPIO_Init(GPIOA, &gpio);
 
-    USART_InitTypeDef usart3;
-    USART_StructInit(&usart3);
-    usart3.USART_BaudRate = 9600;
-    USART_Init(USART3, &usart3);
+    USART_InitTypeDef usart2;
+    USART_StructInit(&usart2);
+    usart2.USART_BaudRate = 115200;
+    USART_Init(USART2, &usart2);
 }
 
 void enable_rs232_interrupts(void)
@@ -91,12 +105,12 @@ void enable_rs232_interrupts(void)
     NVIC_InitTypeDef NVIC_InitStructure;
 
     /* Enable transmit and receive interrupts for the USART2. */
-    USART_ITConfig(USART3, USART_IT_TXE, DISABLE);
-    USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);
+    USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
+    USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
 
     /* Enable the USART2 IRQ in the NVIC module (so that the USART2 interrupt
      * handler is enabled). */
-    NVIC_InitStructure.NVIC_IRQChannel = USART3_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure);
@@ -105,5 +119,12 @@ void enable_rs232_interrupts(void)
 void enable_rs232(void)
 {
     /* Enable the RS232 port. */
-    USART_Cmd(USART3, ENABLE);
+    USART_Cmd(USART2, ENABLE);
+}
+
+void delay(uint32_t ms) {
+    ms *= 3360;
+    while(ms--) {
+        __NOP();
+    }
 }

@@ -11,6 +11,8 @@
 
 /* Initialize the LED (the board only has one). */
 void init_led(void);
+void led_blink(void *pvParameters);
+void delay(uint32_t ms);
 
 /* Initialize the button (the board only has one). */
 void init_button(void);
