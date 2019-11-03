@@ -4,10 +4,17 @@
 #include <string.h>
 #include "fio.h"
 #include "filesystem.h"
+#include "stm32_F407.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "host.h"
+
+extern xTaskHandle xHandle_led;
+extern xTaskHandle xHandle_comm;
+extern xTaskHandle task1;
+extern xTaskHandle task2;
+extern xTaskHandle task3;
 
 typedef struct {
 	const char *name;
@@ -25,6 +32,8 @@ void host_command(int, char **);
 void mmtest_command(int, char **);
 void test_command(int, char **);
 void _command(int, char **);
+void led_command(int, char **);
+void context_command(int , char **);
 
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
 
@@ -37,6 +46,8 @@ cmdlist cl[]={
 	MKCL(mmtest, "heap memory allocation test"),
 	MKCL(help, "help"),
 	MKCL(test, "test new function"),
+	MKCL(led, "led blink command"),
+	MKCL(context, "test context switch time"),
 	MKCL(, ""),
 };
 
@@ -200,4 +211,19 @@ cmdfunc *do_command(const char *cmd){
 			return cl[i].fptr;
 	}
 	return NULL;	
+}
+
+void led_command(int n, char *argv[]) {
+	fio_printf(1, "\r\n");
+	xTaskCreate(led_blink,
+	            (signed portCHAR *) "LED",
+	            256 /* stack size */, NULL, tskIDLE_PRIORITY + 2, &xHandle_led);
+}
+
+void context_command(int n, char *argv[]) {
+	fio_printf(1, "\r\n");
+	xTaskCreate( Task1, (signed char*)"Task1", 128, NULL, tskIDLE_PRIORITY+2, &task1 );
+	xTaskCreate( Task2, (signed char*)"Task2", 128, NULL, tskIDLE_PRIORITY+3, &task2 );
+	xTaskCreate( Task3, (signed char*)"Task3", 128, NULL, tskIDLE_PRIORITY+4, &task3 );
+	// vTaskSuspend(xHandle_comm);
 }

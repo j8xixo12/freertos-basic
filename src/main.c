@@ -21,6 +21,13 @@
  * it contains file system structure of test_romfs directory
  */
 extern const unsigned char _sromfs;
+extern const uint16_t LED[4];
+xTaskHandle xHandle_led = NULL;
+xTaskHandle xHandle_comm = NULL;
+xTaskHandle task1 = NULL;
+xTaskHandle task2 = NULL;
+xTaskHandle task3 = NULL;
+void send(char ch);
 
 //static void setup_hardware();
 
@@ -40,22 +47,22 @@ void USART2_IRQHandler()
 		 * that the buffer has a spot free for the next byte.
 		 */
 		xSemaphoreGiveFromISR(serial_tx_wait_sem, &xHigherPriorityTaskWoken);
-
 		/* Diables the transmit interrupt. */
 		USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
 		/* If this interrupt is for a receive... */
 	}else if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET){
 		char msg = USART_ReceiveData(USART2);
-
 		/* If there is an error when queueing the received byte, freeze! */
 		if(!xQueueSendToBackFromISR(serial_rx_queue, &msg, &xHigherPriorityTaskWoken))
-			while(1);
+			// while(1);
+			fio_printf(1, "1");
 	}
 	else {
 		/* Only transmit and receive interrupts should be enabled.
 		 * If this is another type of interrupt, freeze.
 		 */
-		while(1);
+		// while(1);
+		fio_printf(1, "2");
 	}
 
 	if (xHigherPriorityTaskWoken) {
@@ -152,12 +159,12 @@ int main()
 	init_rs232();
 	enable_rs232_interrupts();
 	enable_rs232();
-	// init_led();
+	init_led();
 	
-	fs_init();
+	// fs_init();
 	fio_init();
 	
-	register_romfs("romfs", &_sromfs);
+	// register_romfs("romfs", &_sromfs);
 	
 	/* Create the queue used by the serial task.  Messages for write to
 	 * the RS232. */
@@ -166,16 +173,14 @@ int main()
 	 * Reference: www.freertos.org/a00116.html */
 	serial_rx_queue = xQueueCreate(1, sizeof(char));
 
-    register_devfs();
+    // register_devfs();
 	/* Create a task to output text read from romfs. */
-	xTaskCreate(command_prompt,
-	            (signed portCHAR *) "CLI",
-	            512 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
-
-	// xTaskCreate(led_blink,
-	//             (signed portCHAR *) "LED",
-	//             128 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
-
+	// xTaskCreate(command_prompt,
+	//             (signed portCHAR *) "CLI",
+	//             512 /* stack size */, NULL, tskIDLE_PRIORITY + 4, &xHandle_comm);
+	xTaskCreate( Task1, (signed char*)"Task1", 128, NULL, tskIDLE_PRIORITY+1, &task1 );
+	xTaskCreate( Task2, (signed char*)"Task2", 128, NULL, tskIDLE_PRIORITY+2, &task2 );
+	xTaskCreate( Task3, (signed char*)"Task3", 128, NULL, tskIDLE_PRIORITY+3, &task3 );
 #if 0
 	/* Create a task to record system log. */
 	xTaskCreate(system_logger,
@@ -191,4 +196,12 @@ int main()
 
 void vApplicationTickHook()
 {
+}
+
+void send(char ch) {
+    // while(*str_in){
+            USART_SendData(USART2, (unsigned int)ch);
+            while (USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
+        // }
+    return ;
 }

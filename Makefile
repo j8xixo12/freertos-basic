@@ -1,6 +1,6 @@
 TARGET = main
 .DEFAULT_GOAL = all
-
+GDB = arm-none-eabi-gdb
 CROSS_COMPILE ?= arm-none-eabi-
 CC := $(CROSS_COMPILE)gcc
 CFLAGS = -O0 \
@@ -89,6 +89,9 @@ clean:
 
 flash: $(OUTDIR)/$(TARGET).bin
 	st-flash write $(OUTDIR)/$(TARGET).bin 0x8000000
+
+debug: $(OUTDIR)/$(TARGET).elf
+	$(GDB) -tui $(OUTDIR)/$(TARGET).elf
 
 -include $(DEP)
 

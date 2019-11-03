@@ -12,7 +12,8 @@ static struct fddef_t fio_fds[MAX_FDS];
 
 /* recv_byte is define in main.c */
 char recv_byte();
-void send_byte(char);
+// void send(char);
+extern void send(char);
 
 enum KeyName{ESC=27, BACKSPACE=127};
 
@@ -44,16 +45,16 @@ static ssize_t stdin_read(void * opaque, void * buf, size_t count) {
 		case BACKSPACE:
 			last_chr_is_esc=0;
 			if(i>0){
-				send_byte('\b');
-				send_byte(' ');
-				send_byte('\b');
+				send('\b');
+				send(' ');
+				send('\b');
 				--i;
 			}
 			continue;
 		default:
 			last_chr_is_esc=0;
 	}
-	send_byte(ptrbuf[i]);
+	send(ptrbuf[i]);
 	++i;
     }
     return i;
@@ -64,7 +65,7 @@ static ssize_t stdout_write(void * opaque, const void * buf, size_t count) {
     const char * data = (const char *) buf;
     
     for (i = 0; i < count; i++)
-        send_byte(data[i]);
+        send(data[i]);
     
     return count;
 }

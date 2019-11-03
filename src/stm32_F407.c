@@ -1,11 +1,25 @@
 #include "stm32_F407.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "clib.h"
+
+extern xTaskHandle xHandle_comm;
+extern xTaskHandle task1;
+extern xTaskHandle task2;
+extern xTaskHandle task3;
+extern xTaskHandle xHandle_led;
+extern void command_prompt(void *pvParameters);
+
 
 const uint16_t LEDS = GPIO_Pin_12 | GPIO_Pin_13 | GPIO_Pin_14 | GPIO_Pin_15;
 const uint16_t LED[4] = {GPIO_Pin_12, GPIO_Pin_13, GPIO_Pin_14, GPIO_Pin_15};
-static int i = 0;
-const portTickType xDelay = 500 / portTICK_RATE_MS;
+
+const portTickType xDelay = 1000 / portTICK_RATE_MS;
+
+uint32_t iii = 0;
+// uint32_t k = 0;
+
+
 
 void init_led(void)
 {
@@ -15,17 +29,20 @@ void init_led(void)
     gpio.GPIO_Mode = GPIO_Mode_OUT;
     gpio.GPIO_Pin = LEDS;
     GPIO_Init(GPIOD, &gpio);
-
-    GPIO_SetBits(GPIOD, LEDS);
 }
 
 void led_blink(void *pvParameters) { 
-    while (1) {
+    uint32_t ii = 0;
+    uint16_t i = 0;
+    while (i < 4) {
         GPIO_ResetBits(GPIOD, LEDS);
         GPIO_SetBits(GPIOD, LED[i % 4]);
         ++i;
-        vTaskDelay(xDelay);
+        for (ii = 0; ii < 10000000; ++ii);
+        // vTaskDelay(xDelay);
     }
+    GPIO_ResetBits(GPIOD, LEDS);
+    vTaskDelete(xHandle_led);
     return;
 }
 
@@ -127,4 +144,36 @@ void delay(uint32_t ms) {
     while(ms--) {
         __NOP();
     }
+}
+
+void Task1( void* pvParameters )
+{
+	while(1){
+        __NOP();
+        __NOP();
+        __NOP();
+        ++iii;
+	}
+}
+
+
+void Task2( void* pvParameters )
+{
+	while(1){
+		vTaskDelay(1000 / portTICK_RATE_MS);
+        fio_printf(1, "K:%d\n", iii);
+        iii = 0;
+	}
+}
+
+void Task3( void* pvParameters )
+{
+    vTaskDelay(10000 / portTICK_RATE_MS);
+
+    fio_printf(1, "final K:%d\n", iii);
+
+    vTaskDelete( task1 );
+	vTaskDelete( task2 );
+	vTaskDelete( task3 );
+    // vTaskResume(xHandle_comm);
 }

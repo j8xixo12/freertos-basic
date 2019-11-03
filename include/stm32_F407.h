@@ -8,6 +8,7 @@
 #include "stm32f4xx_exti.h"
 #include "stm32f4xx_syscfg.h"
 #include "misc.h"
+#include "core_cmInstr.h"
 
 /* Initialize the LED (the board only has one). */
 void init_led(void);
@@ -30,5 +31,9 @@ void init_rs232(void);
 void enable_rs232_interrupts(void);
 
 void enable_rs232(void);
+
+void Task1( void* pvParameters );
+void Task2( void* pvParameters );
+void Task3( void* pvParameters );
 
 #endif /* __STM32_P103_H */
